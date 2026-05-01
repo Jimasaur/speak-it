@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Speak It — Top Decisions</title>
+<style>
+:root{
+  --bg:#08050f;--card:#15102a;--text:#fbf7ec;--muted:#b9adc9;
+  --gold:#d9b76f;--purple:#8f6cff;--line:rgba(255,255,255,.13);
+  --ok:#7ee0a4;--bad:#ff8aa5
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 20% 0,rgba(143,108,255,.26),transparent 32rem),
+    radial-gradient(circle at 90% 30%,rgba(217,183,111,.16),transparent 28rem),
+    linear-gradient(135deg,#08050f,#130d22 58%,#090612);
+}
+.app{width:min(960px,calc(100% - 32px));margin:0 auto;padding:24px 0 80px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
+.brand{font-size:22px;font-weight:900;letter-spacing:-.04em}
+.brand span{color:var(--gold)}
+.meta{color:var(--muted);font-size:13px;margin-top:3px}
+.client{display:flex;gap:10px;align-items:center}
+.client input{width:170px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.07);color:var(--text);padding:9px 12px;font:inherit}
+.btn{border:0;cursor:pointer;border-radius:999px;padding:10px 14px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff0b5);color:#120d20;font:inherit}
+.btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text)}
+
+/* Constellation header — wider, flatter than the card variant */
+.stage-head{position:relative;display:grid;place-items:center;padding:24px 0 14px}
+.halo{position:relative;width:min(620px,100%);aspect-ratio:3/1;display:grid;place-items:center}
+.ring{position:absolute;inset:14% 22%;border:1px solid rgba(217,183,111,.16);border-radius:50%;opacity:.5}
+.ring.inner{inset:30% 36%;border-color:rgba(143,108,255,.22)}
+.ctx{position:absolute;display:grid;place-items:center;text-align:center;width:50px;height:50px;border-radius:50%;
+  background:rgba(20,16,33,.72);border:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.05em;
+  transition:.4s;backdrop-filter:blur(8px)}
+.ctx .glyph{font-size:14px;display:block;margin-bottom:1px;opacity:.7}
+.ctx.active{border-color:rgba(217,183,111,.55);color:#ffe6a6;background:rgba(217,183,111,.12);box-shadow:0 0 22px rgba(217,183,111,.25)}
+.ctx.active .glyph{opacity:1}
+.c0{top:10%;left:50%;transform:translateX(-50%)}
+.c1{top:32%;left:4%}
+.c2{top:32%;right:4%}
+.c3{bottom:18%;left:22%}
+.c4{bottom:18%;right:22%}
+.c5{bottom:10%;left:50%;transform:translateX(-50%)}
+.headline{position:relative;z-index:2;text-align:center;padding:0 24px}
+.headline h1{margin:0 0 4px;font-size:clamp(22px,3vw,30px);letter-spacing:-.02em;font-weight:700}
+.headline p{margin:0;color:var(--muted);font-size:14px}
+.headline em{color:var(--gold);font-style:normal;font-weight:800}
+
+/* Card stack */
+.stack{display:grid;gap:14px;margin-top:6px}
+.card{
+  position:relative;
+  background:rgba(255,255,255,.055);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:20px 22px;
+  display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;
+  transition:.32s cubic-bezier(.2,.7,.2,1);
+}
+.card.priority{
+  background:linear-gradient(135deg,rgba(217,183,111,.14),rgba(143,108,255,.12));
+  border-color:rgba(217,183,111,.32);
+  box-shadow:0 18px 60px rgba(0,0,0,.32);
+}
+.card.swipe-out{opacity:0;transform:translateX(40px)}
+.origin{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:8px}
+.origin:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.card .proposal{font-size:17px;line-height:1.4;margin:0 0 6px;letter-spacing:-.005em}
+.card.priority .proposal{font-size:19px;font-weight:600}
+.card .detail{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.card .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.mini{border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--text);border-radius:999px;padding:10px 14px;font:inherit;font-weight:800;cursor:pointer}
+.mini.yes{background:linear-gradient(135deg,var(--gold),#fff0b5);color:#120d20;border:0}
+.mini.skip{color:var(--muted)}
+.card.priority .mini.yes{padding:12px 18px}
+
+/* Voice orb (secondary) */
+.orb-row{display:flex;justify-content:center;margin:36px 0 6px}
+.orb{width:60px;height:60px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 30% 25%,#fff 0 6%,var(--gold) 7% 16%,var(--purple) 50%,#171026 80%);
+  box-shadow:0 0 36px rgba(143,108,255,.4);display:grid;place-items:center;color:#120d20;font-weight:900;font-size:10px;letter-spacing:.1em;
+  transition:.25s}
+.orb:hover{transform:scale(1.08)}
+.orb.listening{animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+.orb-hint{text-align:center;color:var(--muted);font-size:13px;margin-top:6px}
+
+/* Quiet log strip */
+.quiet{margin-top:32px;border-top:1px solid var(--line);padding-top:18px}
+.quiet h3{margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.quiet-log{display:grid;gap:6px}
+.quiet-log .line{color:#cdc2dc;font-size:14px;line-height:1.5}
+.quiet-log .line small{color:var(--muted);font-size:12px;margin-left:8px}
+
+.empty{padding:46px 20px;text-align:center;color:var(--muted)}
+.empty .big{font-size:42px;margin-bottom:8px;opacity:.6}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(160px);background:#fbf7ec;color:#120d20;border-radius:999px;padding:12px 18px;font-weight:800;z-index:30;transition:.3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.command{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);width:min(560px,calc(100% - 32px));
+  background:rgba(8,5,15,.92);border:1px solid var(--line);border-radius:24px;padding:14px;
+  display:grid;grid-template-columns:1fr auto;gap:10px;backdrop-filter:blur(14px);transition:.3s;z-index:25}
+.command.show{transform:translateX(-50%) translateY(0)}
+.command input{border:0;background:transparent;color:var(--text);font:inherit;outline:0;padding:10px}
+
+@media(max-width:720px){
+  .halo{aspect-ratio:1.6/1}
+  .ctx{width:42px;height:42px;font-size:9px}
+  .ctx .glyph{font-size:12px}
+  .card{grid-template-columns:1fr}
+  .card .actions{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="brand">Speak <span>It</span></div>
+      <div class="meta" id="dateLine"></div>
+    </div>
+    <div class="client">
+      <input id="clientName" />
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <a class="btn ghost" href="./">Landing</a>
+    </div>
+  </header>
+
+  <div class="stage-head">
+    <div class="halo" id="halo"></div>
+    <div class="headline">
+      <h1 id="headlineTitle">Three things, one minute.</h1>
+      <p id="headlineSub">The first one matters most. The rest can wait.</p>
+    </div>
+  </div>
+
+  <main class="stack" id="stack"></main>
+
+  <div class="orb-row"><div class="orb" id="orb">SPEAK</div></div>
+  <div class="orb-hint">or just say something</div>
+
+  <section class="quiet">
+    <h3>Quietly handled</h3>
+    <div class="quiet-log" id="quietLog"></div>
+  </section>
+</div>
+
+<form class="command" id="command">
+  <input id="commandText" placeholder='Tell me what you need…' />
+  <button class="btn" type="submit">Send</button>
+</form>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const qs=new URLSearchParams(location.search);
+const initialName=qs.get('name')||localStorage.getItem('speakit.clientName')||'Sarah';
+
+const seedProposals=[
+  {id:'p1',ctx:'shopping',proposal:'You typically order groceries in the next 24 hours. Want me to repeat your last Instacart order?',detail:'$87.40 · 23 items · arrives tomorrow 4–6pm'},
+  {id:'p2',ctx:'finances',proposal:'Internet bill is $18 higher than last month. Want me to call Comcast?',detail:'4 min average call · script ready'},
+  {id:'p3',ctx:'inbox',proposal:'Sam\'s follow-up has been waiting 3 days. Send the draft I prepared?',detail:'4 lines · friendly tone · prepared yesterday'},
+  {id:'p4',ctx:'calendar',proposal:'No lunch on the calendar this week. Block 12–1 tomorrow?',detail:'Tuesday · marked private'},
+];
+const contexts=[
+  {key:'inbox',glyph:'✉',label:'Inbox',pos:'c0'},
+  {key:'calendar',glyph:'◷',label:'Cal',pos:'c1'},
+  {key:'shopping',glyph:'◼',label:'Shop',pos:'c2'},
+  {key:'finances',glyph:'$',label:'Money',pos:'c3'},
+  {key:'community',glyph:'◌',label:'Comm',pos:'c4'},
+  {key:'family',glyph:'⌂',label:'Family',pos:'c5'},
+];
+
+function load(){try{return JSON.parse(localStorage.getItem('speakit.stack'))||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[
+  {t:'9 min ago',m:'Drafted Sam follow-up; held for your OK.'},
+  {t:'24 min ago',m:'Reviewed grocery cadence; queued the question above.'},
+  {t:'41 min ago',m:'Archived 9 low-signal emails; kept 2 priority threads on top.'},
+]}}catch{return null}}
+let state=load()||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[]};
+function save(){localStorage.setItem('speakit.stack',JSON.stringify(state));localStorage.setItem('speakit.clientName',state.name)}
+
+function render(){
+  document.getElementById('clientName').value=state.name;
+  document.getElementById('dateLine').textContent=new Date().toLocaleString([],{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+  renderHalo();
+  renderHeadline();
+  renderStack();
+  renderLog();
+  save();
+}
+
+function renderHalo(){
+  const activeKeys=new Set(state.queue.slice(0,3).map(p=>p.ctx));
+  document.getElementById('halo').innerHTML=
+    `<div class="ring"></div><div class="ring inner"></div>` +
+    contexts.map(c=>`<div class="ctx ${c.pos} ${activeKeys.has(c.key)?'active':''}"><span class="glyph">${c.glyph}</span>${c.label}</div>`).join('');
+}
+
+function renderHeadline(){
+  const n=Math.min(state.queue.length,3);
+  const t=document.getElementById('headlineTitle');
+  const s=document.getElementById('headlineSub');
+  if(n===0){t.textContent='Nothing needs you right now.';s.textContent='The agent is handling the rest.';return}
+  if(n===1){t.innerHTML='<em>One thing</em>, one minute.';s.textContent='Just the one decision below.';return}
+  t.innerHTML=`<em>${n} things</em>, one minute.`;
+  s.textContent='The first one matters most. The rest can wait.';
+}
+
+function renderStack(){
+  const top=state.queue.slice(0,3);
+  const stack=document.getElementById('stack');
+  if(!top.length){
+    stack.innerHTML=`<div class="empty"><div class="big">·</div>Speak if you want it to do something.</div>`;
+    return;
+  }
+  stack.innerHTML=top.map((p,i)=>`
+    <article class="card ${i===0?'priority':''}" data-id="${p.id}">
+      <div>
+        <div class="origin">${labelFor(p.ctx)} · proposed</div>
+        <p class="proposal">${p.proposal}</p>
+        <p class="detail">${p.detail}</p>
+      </div>
+      <div class="actions">
+        <button class="mini yes" onclick="act('${p.id}','yes')">${i===0?'Yes, do it':'Yes'}</button>
+        <button class="mini" onclick="act('${p.id}','change')">Change</button>
+        <button class="mini skip" onclick="act('${p.id}','skip')">Not now</button>
+      </div>
+    </article>
+  `).join('');
+}
+
+function labelFor(key){return (contexts.find(c=>c.key===key)||{label:'Agent'}).label}
+
+function renderLog(){
+  document.getElementById('quietLog').innerHTML=state.log.slice(0,6).map(l=>`<div class="line">${l.m}<small>${l.t}</small></div>`).join('');
+}
+
+function act(id,action){
+  const idx=state.queue.findIndex(p=>p.id===id);
+  if(idx<0)return;
+  const p=state.queue[idx];
+  const card=document.querySelector(`.card[data-id="${id}"]`);
+  let msg='';
+  if(action==='yes'){msg='Done. Agent is executing.';state.log.unshift({t:'Just now',m:`Approved: ${trim(p.proposal)}`});}
+  else if(action==='change'){msg='Tell me what to change.';state.log.unshift({t:'Just now',m:`Edit requested: ${trim(p.proposal)}`});state.queue.splice(idx,1,{...p,id:'edit'+Date.now(),proposal:'(Editing) '+p.proposal});render();return}
+  else {msg='Snoozed. I\'ll bring it back when it makes sense.';state.log.unshift({t:'Just now',m:`Snoozed: ${trim(p.proposal)}`});}
+  if(card){card.classList.add('swipe-out');setTimeout(()=>{state.queue.splice(idx,1);render();toast(msg)},300)}
+  else{state.queue.splice(idx,1);render();toast(msg)}
+}
+window.act=act;
+
+function trim(s){return s.length>60?s.slice(0,57)+'…':s}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+
+// Voice
+const orb=document.getElementById('orb');
+const cmd=document.getElementById('command');
+function toggleSpeak(){
+  orb.classList.toggle('listening');
+  cmd.classList.toggle('show');
+  orb.textContent=orb.classList.contains('listening')?'…':'SPEAK';
+  if(cmd.classList.contains('show'))setTimeout(()=>document.getElementById('commandText').focus(),50);
+}
+orb.onclick=toggleSpeak;
+cmd.onsubmit=e=>{
+  e.preventDefault();
+  const v=document.getElementById('commandText').value.trim();
+  if(!v)return;
+  state.queue.unshift({id:'usr'+Date.now(),ctx:guessCtx(v),proposal:`I heard: "${v}". Want me to handle it?`,detail:'Drafted from your voice command.'});
+  state.log.unshift({t:'Just now',m:`Voice: "${v}" — drafted into proposal.`});
+  document.getElementById('commandText').value='';
+  toggleSpeak();render();
+};
+function guessCtx(s){const l=s.toLowerCase();if(/grocer|order|buy|amazon|instacart/.test(l))return 'shopping';if(/email|inbox|sam|follow/.test(l))return 'inbox';if(/move|3pm|calendar|meeting|lunch/.test(l))return 'calendar';if(/bill|pay|invoice/.test(l))return 'finances';if(/parent|practice|coach/.test(l))return 'community';if(/home|errand|family/.test(l))return 'family';return 'inbox';}
+
+document.getElementById('clientName').onchange=e=>{state.name=e.target.value||'Sarah';render()};
+document.getElementById('resetBtn').onclick=()=>{localStorage.removeItem('speakit.stack');state=load()||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[]};render();toast('Reset.')};
+
+render();
+</script>
+</body>
+</html>

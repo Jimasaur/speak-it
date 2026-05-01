@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Speak It — One Decision At A Time</title>
+<style>
+:root{
+  --bg:#08050f;--card:#15102a;--text:#fbf7ec;--muted:#b9adc9;
+  --gold:#d9b76f;--purple:#8f6cff;--line:rgba(255,255,255,.13);
+  --ok:#7ee0a4;--bad:#ff8aa5
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 20% 0,rgba(143,108,255,.26),transparent 32rem),
+    radial-gradient(circle at 90% 30%,rgba(217,183,111,.16),transparent 28rem),
+    linear-gradient(135deg,#08050f,#130d22 58%,#090612);
+}
+.app{width:min(960px,calc(100% - 32px));margin:0 auto;padding:24px 0 80px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+.brand{font-size:22px;font-weight:900;letter-spacing:-.04em}
+.brand span{color:var(--gold)}
+.meta{color:var(--muted);font-size:13px;margin-top:3px}
+.client{display:flex;gap:10px;align-items:center}
+.client input{width:170px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.07);color:var(--text);padding:9px 12px;font:inherit}
+.btn{border:0;cursor:pointer;border-radius:999px;padding:10px 14px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff0b5);color:#120d20;font:inherit}
+.btn.ghost{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text)}
+
+/* Constellation halo around the card */
+.stage{position:relative;display:grid;place-items:center;padding:40px 0 8px}
+.halo{position:relative;width:min(680px,100%);aspect-ratio:1.4/1;display:grid;place-items:center}
+.ring{position:absolute;inset:8% 4%;border:1px solid rgba(217,183,111,.18);border-radius:50%;opacity:.6}
+.ring.inner{inset:22% 16%;border-color:rgba(143,108,255,.22)}
+.ctx{position:absolute;display:grid;place-items:center;text-align:center;width:64px;height:64px;border-radius:50%;
+  background:rgba(20,16,33,.7);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.05em;
+  transition:.4s;backdrop-filter:blur(8px)}
+.ctx .glyph{font-size:18px;display:block;margin-bottom:2px;opacity:.7}
+.ctx.active{border-color:rgba(217,183,111,.6);color:#ffe6a6;background:rgba(217,183,111,.12);box-shadow:0 0 32px rgba(217,183,111,.25)}
+.ctx.active .glyph{opacity:1}
+/* 6 surrounding dots, evenly distributed top arc */
+.c0{top:6%;left:50%;transform:translateX(-50%)}
+.c1{top:22%;left:8%}
+.c2{top:22%;right:8%}
+.c3{top:55%;left:0%}
+.c4{top:55%;right:0%}
+.c5{bottom:6%;left:50%;transform:translateX(-50%)}
+
+/* The proposal card */
+.card{
+  position:relative;z-index:2;
+  width:min(560px,calc(100% - 60px));
+  background:linear-gradient(135deg,rgba(217,183,111,.14),rgba(143,108,255,.14));
+  border:1px solid rgba(217,183,111,.32);
+  border-radius:32px;padding:28px 28px 22px;
+  box-shadow:0 28px 80px rgba(0,0,0,.4);
+  text-align:center;
+  transition:.35s cubic-bezier(.2,.7,.2,1);
+}
+.card.swipe-out{opacity:0;transform:translateY(-30px) scale(.95)}
+.card.swipe-in{animation:cardIn .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+.origin{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin-bottom:14px}
+.origin:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.proposal{font-size:clamp(20px,2.6vw,26px);line-height:1.4;margin:0 0 8px;letter-spacing:-.01em;font-weight:600}
+.detail{color:var(--muted);font-size:15px;margin:0 0 22px;line-height:1.5}
+.actions{display:grid;grid-template-columns:1fr auto auto;gap:10px}
+.actions .yes{background:linear-gradient(135deg,var(--gold),#fff0b5);color:#120d20;font-weight:900;border:0;border-radius:999px;padding:14px 18px;cursor:pointer;font:inherit;font-size:16px}
+.actions .change,.actions .skip{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:14px 16px;cursor:pointer;font:inherit;font-weight:700}
+.actions .yes:hover{filter:brightness(1.05)}
+
+/* Voice orb (secondary) */
+.orb-row{display:flex;justify-content:center;margin:32px 0 8px}
+.orb{width:64px;height:64px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 30% 25%,#fff 0 6%,var(--gold) 7% 16%,var(--purple) 50%,#171026 80%);
+  box-shadow:0 0 40px rgba(143,108,255,.4);display:grid;place-items:center;color:#120d20;font-weight:900;font-size:11px;letter-spacing:.1em;
+  transition:.25s}
+.orb:hover{transform:scale(1.08)}
+.orb.listening{animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+.orb-hint{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+
+/* Quiet log strip */
+.quiet{margin-top:42px;border-top:1px solid var(--line);padding-top:20px}
+.quiet h3{margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.quiet-log{display:grid;gap:6px}
+.quiet-log .line{color:#cdc2dc;font-size:14px;line-height:1.5}
+.quiet-log .line small{color:var(--muted);font-size:12px;margin-left:8px}
+
+/* Done state */
+.done-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.done-state .big{font-size:54px;margin-bottom:12px;opacity:.7}
+.done-state h2{margin:0 0 8px;color:var(--text);font-size:24px;letter-spacing:-.02em}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(160px);background:#fbf7ec;color:#120d20;border-radius:999px;padding:12px 18px;font-weight:800;z-index:30;transition:.3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Voice command panel */
+.command{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);width:min(560px,calc(100% - 32px));
+  background:rgba(8,5,15,.92);border:1px solid var(--line);border-radius:24px;padding:14px;
+  display:grid;grid-template-columns:1fr auto;gap:10px;backdrop-filter:blur(14px);transition:.3s;z-index:25}
+.command.show{transform:translateX(-50%) translateY(0)}
+.command input{border:0;background:transparent;color:var(--text);font:inherit;outline:0;padding:10px}
+
+@media(max-width:720px){
+  .halo{aspect-ratio:1/1.1}
+  .ctx{width:50px;height:50px;font-size:10px}
+  .ctx .glyph{font-size:14px}
+  .actions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <div class="brand">Speak <span>It</span></div>
+      <div class="meta" id="dateLine"></div>
+    </div>
+    <div class="client">
+      <input id="clientName" />
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <a class="btn ghost" href="./">Landing</a>
+    </div>
+  </header>
+
+  <main class="stage" id="stage"></main>
+
+  <div class="orb-row"><div class="orb" id="orb">SPEAK</div></div>
+  <div class="orb-hint">or just say something</div>
+
+  <section class="quiet">
+    <h3>Quietly handled</h3>
+    <div class="quiet-log" id="quietLog"></div>
+  </section>
+</div>
+
+<form class="command" id="command">
+  <input id="commandText" placeholder='Tell me what you need…' />
+  <button class="btn" type="submit">Send</button>
+</form>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const qs=new URLSearchParams(location.search);
+const initialName=qs.get('name')||localStorage.getItem('speakit.clientName')||'Sarah';
+
+// Each proposal carries an "origin context" — that's what lights up in the halo.
+const seedProposals=[
+  {id:'p1',ctx:'shopping',proposal:'You typically order groceries in the next 24 hours. Want me to repeat your last Instacart order?',detail:'$87.40 · 23 items · arrives tomorrow 4–6pm'},
+  {id:'p2',ctx:'finances',proposal:'Your internet bill is $18 higher than last month. Want me to call and ask why?',detail:'Comcast · $18 variance · 4 min average call time'},
+  {id:'p3',ctx:'calendar',proposal:'You haven\'t had lunch off your calendar this week. Want me to block 12–1 tomorrow?',detail:'Tuesday · 12:00–1:00 PM · marked private'},
+  {id:'p4',ctx:'inbox',proposal:'Sam\'s follow-up has been waiting 3 days. Want me to send the draft I prepared?',detail:'Drafted · 4 lines · friendly tone'},
+];
+const contexts=[
+  {key:'inbox',glyph:'✉',label:'Inbox',pos:'c0'},
+  {key:'calendar',glyph:'◷',label:'Calendar',pos:'c1'},
+  {key:'shopping',glyph:'◼',label:'Shopping',pos:'c2'},
+  {key:'finances',glyph:'$',label:'Finances',pos:'c3'},
+  {key:'community',glyph:'◌',label:'Community',pos:'c4'},
+  {key:'family',glyph:'⌂',label:'Family',pos:'c5'},
+];
+
+function load(){try{return JSON.parse(localStorage.getItem('speakit.card'))||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[
+  {t:'9 min ago',m:'Drafted Sam follow-up; held for your OK.'},
+  {t:'24 min ago',m:'Reviewed grocery cadence; queued the question above.'},
+  {t:'41 min ago',m:'Archived 9 low-signal emails; kept 2 priority threads on top.'},
+]}}catch{return null}}
+let state=load()||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[]};
+function save(){localStorage.setItem('speakit.card',JSON.stringify(state));localStorage.setItem('speakit.clientName',state.name)}
+
+function render(){
+  document.getElementById('clientName').value=state.name;
+  document.getElementById('dateLine').textContent=new Date().toLocaleString([],{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+  renderStage();
+  renderLog();
+  save();
+}
+
+function renderStage(){
+  const stage=document.getElementById('stage');
+  if(!state.queue.length){
+    stage.innerHTML=`<div class="done-state"><div class="big">·</div><h2>Nothing needs you right now.</h2><p>The agent is handling the rest. Speak if you want it to do something.</p></div>`;
+    return;
+  }
+  const cur=state.queue[0];
+  stage.innerHTML=`
+    <div class="halo">
+      ${renderHalo(cur.ctx)}
+      <article class="card swipe-in" id="card">
+        <div class="origin">${labelFor(cur.ctx)} · proposed</div>
+        <p class="proposal">${cur.proposal}</p>
+        <p class="detail">${cur.detail}</p>
+        <div class="actions">
+          <button class="yes" onclick="act('yes')">Yes, do it</button>
+          <button class="change" onclick="act('change')">Change</button>
+          <button class="skip" onclick="act('skip')">Not now</button>
+        </div>
+      </article>
+    </div>`;
+}
+
+function renderHalo(activeKey){
+  return `<div class="ring"></div><div class="ring inner"></div>` +
+    contexts.map(c=>`<div class="ctx ${c.pos} ${c.key===activeKey?'active':''}"><span class="glyph">${c.glyph}</span>${c.label}</div>`).join('');
+}
+
+function labelFor(key){return (contexts.find(c=>c.key===key)||{label:'Agent'}).label}
+
+function renderLog(){
+  document.getElementById('quietLog').innerHTML=state.log.slice(0,6).map(l=>`<div class="line">${l.m}<small>${l.t}</small></div>`).join('');
+}
+
+function act(action){
+  const card=document.getElementById('card');
+  const cur=state.queue[0];
+  if(!cur)return;
+  let msg='';
+  if(action==='yes'){msg='Done. Agent is executing now.';state.log.unshift({t:'Just now',m:`Approved: ${trim(cur.proposal)}`});}
+  else if(action==='change'){msg='Tell me what to change.';state.log.unshift({t:'Just now',m:`Edit requested on: ${trim(cur.proposal)}`});state.queue.unshift({...cur,id:'edit'+Date.now(),proposal:'(Editing) '+cur.proposal});}
+  else {msg='Snoozed. I\'ll bring it back when it makes sense.';state.log.unshift({t:'Just now',m:`Snoozed: ${trim(cur.proposal)} — agent will choose a smarter moment`});}
+  toast(msg);
+  if(card){card.classList.add('swipe-out');setTimeout(()=>{state.queue.shift();render();},320)}
+  else{state.queue.shift();render();}
+}
+window.act=act;
+
+function trim(s){return s.length>60?s.slice(0,57)+'…':s}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+
+// Voice
+const orb=document.getElementById('orb');
+const cmd=document.getElementById('command');
+function toggleSpeak(){
+  orb.classList.toggle('listening');
+  cmd.classList.toggle('show');
+  orb.textContent=orb.classList.contains('listening')?'…':'SPEAK';
+  if(cmd.classList.contains('show'))setTimeout(()=>document.getElementById('commandText').focus(),50);
+}
+orb.onclick=toggleSpeak;
+cmd.onsubmit=e=>{
+  e.preventDefault();
+  const v=document.getElementById('commandText').value.trim();
+  if(!v)return;
+  state.queue.unshift({id:'usr'+Date.now(),ctx:guessCtx(v),proposal:`I heard: "${v}". Want me to handle it?`,detail:'Drafted from your voice command.'});
+  state.log.unshift({t:'Just now',m:`Voice: "${v}" — drafted into proposal.`});
+  document.getElementById('commandText').value='';
+  toggleSpeak();render();
+};
+function guessCtx(s){const l=s.toLowerCase();if(/grocer|order|buy|amazon|instacart/.test(l))return 'shopping';if(/email|inbox|sam|follow/.test(l))return 'inbox';if(/move|3pm|calendar|meeting|lunch/.test(l))return 'calendar';if(/bill|pay|invoice/.test(l))return 'finances';if(/parent|practice|coach/.test(l))return 'community';if(/home|errand|family/.test(l))return 'family';return 'inbox';}
+
+document.getElementById('clientName').onchange=e=>{state.name=e.target.value||'Sarah';render()};
+document.getElementById('resetBtn').onclick=()=>{localStorage.removeItem('speakit.card');state=load()||{name:initialName,queue:JSON.parse(JSON.stringify(seedProposals)),log:[]};render();toast('Reset.')};
+
+render();
+</script>
+</body>
+</html>
