@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speak It</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080e;
+      --surface: #11111a;
+      --border: #1c1c2a;
+      --accent: #7c6fe0;
+      --accent-soft: #a89df0;
+      --text: #eeeef5;
+      --muted: #6e6e82;
+      --gold: #c9a84c;
+      --gold-soft: #e8c97a;
+      --green: #4ade80;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .screen {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100vh;
+    }
+
+    /* LEFT */
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4rem 3.5rem 4rem 4rem;
+      z-index: 2;
+    }
+
+    .wordmark {
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .wordmark::before { content: '✦'; font-size: 0.9rem; }
+
+    h1 {
+      font-size: clamp(2.2rem, 3.5vw, 3.5rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+    }
+    h1 .line1, h1 .line2 { display: block; color: var(--text); }
+    h1 .line3 { display: block; color: var(--accent-soft); }
+
+    .sub {
+      font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 420px;
+      margin-bottom: 2.5rem;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent-soft); }
+    .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-main {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0.875rem 2rem; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 800; cursor: pointer;
+      text-decoration: none; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-main:hover { background: var(--accent-soft); color: var(--bg); transform: translateY(-1px); }
+    .btn-demo {
+      background: transparent; color: var(--muted); border: none;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: color 0.2s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+    .btn-demo:hover { color: var(--text); }
+
+    .tagline {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .tagline blockquote {
+      font-size: clamp(1rem, 1.4vw, 1.25rem);
+      font-weight: 700; color: var(--gold-soft);
+      font-style: italic; letter-spacing: -0.01em;
+    }
+    .tagline cite {
+      display: block; margin-top: 0.4rem;
+      font-size: 0.8rem; color: var(--muted); font-style: normal;
+    }
+
+    /* RIGHT */
+    .right {
+      position: relative;
+      overflow: hidden;
+    }
+    .right img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top; display: block;
+    }
+    .right::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to right, var(--bg) 0%, transparent 25%);
+      z-index: 1;
+    }
+    .right::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, var(--bg) 0%, transparent 35%);
+      z-index: 1;
+    }
+
+    .float-cards {
+      position: absolute;
+      bottom: 2.5rem; left: 1.5rem; right: 1.5rem;
+      z-index: 2;
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .fcard {
+      background: rgba(17,17,26,0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.82rem;
+    }
+    .fcard-icon { font-size: 1rem; flex-shrink: 0; }
+    .fcard-text { flex: 1; }
+    .fcard-text strong { display: block; font-weight: 700; color: var(--text); margin-bottom: 0.1rem; font-size: 0.82rem; }
+    .fcard-text span { color: var(--muted); font-size: 0.75rem; }
+    .fcard-action {
+      font-size: 0.72rem; font-weight: 700;
+      color: var(--green);
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 6px; padding: 0.25rem 0.6rem;
+      cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+    }
+    .fcard-action:hover { background: rgba(74,222,128,0.25); }
+    .fcard-action.done { color: var(--muted); background: transparent; border-color: var(--border); }
+
+    .agent-badge {
+      position: absolute; top: 1.5rem; right: 1.5rem; z-index: 3;
+      background: rgba(17,17,26,0.88); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 0.4rem 0.875rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .agent-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 5px var(--green);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(17,17,26,0.95); border: 1px solid var(--accent);
+      color: var(--accent-soft); padding: 0.6rem 1.25rem;
+      border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+      z-index: 999; opacity: 0; transition: all 0.3s; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 700px) {
+      html, body { overflow: auto; }
+      .screen { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+      .right { height: 60vw; min-height: 260px; }
+      .left { padding: 2.5rem 1.5rem; }
+      .float-cards { bottom: 1rem; left: 1rem; right: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="left">
+    <div class="wordmark">Speak It</div>
+    <h1>
+      <span class="line1">You run a business.</span>
+      <span class="line2">You have a life.</span>
+      <span class="line3">One agent handles the rest.</span>
+    </h1>
+    <p class="sub">
+      Voice, text, email, or web — one conversation, one context, always on.
+      Speak a request and consider it handled.
+    </p>
+    <div class="pills">
+      <div class="pill"><div class="dot"></div>Email & messages</div>
+      <div class="pill"><div class="dot"></div>Call screening</div>
+      <div class="pill"><div class="dot"></div>Scheduling</div>
+      <div class="pill"><div class="dot"></div>Shopping</div>
+      <div class="pill"><div class="dot"></div>Finances</div>
+      <div class="pill"><div class="dot"></div>Community</div>
+      <div class="pill"><div class="dot"></div>Research</div>
+      <div class="pill"><div class="dot"></div>Family logistics</div>
+    </div>
+    <div class="cta-row">
+      <a href="mailto:jimmy@gopherdrones.com?subject=Speak It — Early Access" class="btn-main">🎙️ Request Access</a>
+      <a href="/dashboard/" class="btn-demo">See the dashboard →</a>
+    </div>
+    <div class="tagline">
+      <blockquote>"Speak it and it shall be."</blockquote>
+      <cite>Invitation only · Currently in private beta</cite>
+    </div>
+  </div>
+
+  <div class="right">
+    <img src="/assets/person.png" alt="" />
+    <div class="agent-badge"><div class="agent-dot"></div>Agent active</div>
+    <div class="float-cards">
+      <div class="fcard">
+        <div class="fcard-icon">✉️</div>
+        <div class="fcard-text">
+          <strong>Follow-up email — draft ready</strong>
+          <span>Client referral · 3 min ago</span>
+        </div>
+        <div class="fcard-action" id="a1" onclick="approve('a1','Sent')">Send</div>
+      </div>
+      <div class="fcard">
+        <div class="fcard-icon">🛒</div>
+        <div class="fcard-text">
+          <strong>Office supplies order — $41.97</strong>
+          <span>Amazon · arrives tomorrow</span>
+        </div>
+        <div class="fcard-action" id="a2" onclick="approve('a2','Ordered')">Order</div>
+      </div>
+      <div class="fcard">
+        <div class="fcard-icon">📅</div>
+        <div class="fcard-text">
+          <strong>Community event RSVP — Thu 6 PM</strong>
+          <span>Deadline today</span>
+        </div>
+        <div class="fcard-action" id="a3" onclick="approve('a3','Confirmed')">Yes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function approve(id, label) {
+    const btn = document.getElementById(id);
+    btn.textContent = '✓ ' + label;
+    btn.classList.add('done');
+    btn.onclick = null;
+    showToast('✓ ' + label);
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>

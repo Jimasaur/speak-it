@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speak It — Your Personal AI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --accent: #7c6fe0;
+      --accent-soft: #a89df0;
+      --text: #e8e8f0;
+      --muted: #7a7a8e;
+      --gold: #c9a84c;
+      --gold-soft: #e8c97a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.02em; color: var(--gold-soft); }
+    .nav-cta {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0.5rem 1.25rem; border-radius: 6px;
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--accent-soft); color: var(--bg); }
+
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -20%; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(124,111,224,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -0.02em; margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent-soft); }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted); max-width: 600px; margin-bottom: 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0.875rem 2rem; border-radius: 8px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent-soft); color: var(--bg); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border); padding: 0.875rem 2rem;
+      border-radius: 8px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent-soft); color: var(--accent-soft); }
+
+    .tagline-band {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2rem; text-align: center;
+    }
+    .tagline-band blockquote {
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 700; color: var(--gold-soft); letter-spacing: -0.01em;
+    }
+    .tagline-band cite {
+      display: block; margin-top: 0.5rem;
+      font-size: 0.875rem; color: var(--muted); font-style: normal;
+    }
+
+    section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent-soft); margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 800; letter-spacing: -0.02em;
+      margin-bottom: 1rem; line-height: 1.15;
+    }
+    .section-sub {
+      font-size: 1.1rem; color: var(--muted);
+      max-width: 600px; margin-bottom: 3rem;
+    }
+
+    .problems {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .problem-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem; position: relative;
+    }
+    .problem-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%; background: var(--accent);
+      border-radius: 12px 0 0 12px;
+    }
+    .problem-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .problem-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+
+    .capabilities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem; margin-top: 2rem;
+    }
+    .cap-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem; text-align: center;
+      transition: border-color 0.2s;
+    }
+    .cap-card:hover { border-color: var(--accent); }
+    .cap-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .cap-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .cap-card p { font-size: 0.85rem; color: var(--muted); }
+
+    .steps { display: flex; flex-direction: column; gap: 1.5rem; max-width: 700px; }
+    .step { display: flex; gap: 1.5rem; align-items: flex-start; }
+    .step-num {
+      flex-shrink: 0; width: 2.5rem; height: 2.5rem;
+      border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.95rem; color: #fff;
+    }
+    .step-content h3 { font-weight: 700; margin-bottom: 0.25rem; }
+    .step-content p { font-size: 0.95rem; color: var(--muted); }
+
+    .modals { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+    .modal-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.6rem 1.25rem;
+      font-size: 0.9rem; font-weight: 600;
+    }
+    .modal-pill span { font-size: 1.1rem; }
+
+    .approval-demo {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; max-width: 480px;
+    }
+    .approval-demo .label {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent-soft); margin-bottom: 1rem;
+    }
+    .approval-item {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border); gap: 1rem;
+    }
+    .approval-item:last-child { border-bottom: none; }
+    .approval-text { font-size: 0.9rem; }
+    .approval-text small { display: block; color: var(--muted); font-size: 0.8rem; }
+    .approval-btns { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .btn-approve {
+      background: #1a3a2a; color: #4ade80; border: 1px solid #2a5a3a;
+      border-radius: 6px; padding: 0.3rem 0.75rem;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer;
+    }
+    .btn-skip {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.3rem 0.75rem; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .homepage-preview {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; max-width: 640px;
+    }
+    .preview-bar {
+      background: var(--border); padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .preview-dots { display: flex; gap: 0.35rem; }
+    .preview-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); opacity: 0.4; }
+    .preview-url { flex: 1; text-align: center; font-size: 0.8rem; color: var(--muted); font-family: monospace; }
+    .preview-body { padding: 1.5rem; }
+    .preview-greeting { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    .preview-greeting span { color: var(--gold-soft); }
+    .preview-widgets { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .preview-widget {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.75rem;
+    }
+    .preview-widget .w-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+    .preview-widget .w-val { font-size: 0.95rem; font-weight: 700; }
+    .preview-widget .w-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .security-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+    .security-item { display: flex; gap: 0.75rem; align-items: flex-start; }
+    .security-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .security-item h4 { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .security-item p { font-size: 0.85rem; color: var(--muted); }
+
+    .cta-section {
+      text-align: center; padding: 5rem 2rem;
+      background: var(--surface); border-top: 1px solid var(--border);
+    }
+    .cta-section h2 {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.02em;
+    }
+    .cta-section p {
+      color: var(--muted); font-size: 1.1rem; margin-bottom: 2rem;
+      max-width: 500px; margin-left: auto; margin-right: auto;
+    }
+
+    footer {
+      text-align: center; padding: 2rem;
+      font-size: 0.8rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem; }
+      .preview-widgets { grid-template-columns: 1fr; }
+      .step { flex-direction: column; gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">✦ Speak It</div>
+  <a href="#contact" class="nav-cta">Request Access</a>
+</nav>
+
+<div class="hero">
+  <h1>You run a business.<br />You have a family.<br />You volunteer.<br /><em>Manage your life in one place.</em></h1>
+  <p>One agent. Every domain. Voice, text, email, or web — always the same conversation, always the same context.</p>
+  <div class="hero-actions">
+    <a href="#how" class="btn-primary">See How It Works</a>
+    <a href="#contact" class="btn-ghost">Request Early Access</a>
+  </div>
+</div>
+
+<div class="tagline-band">
+  <blockquote>"Speak it and it shall be."</blockquote>
+  <cite>Your personal AI handles the work that accumulates between your real priorities.</cite>
+</div>
+
+<section id="problem">
+  <div class="section-label">The Problem</div>
+  <h2 class="section-title">You're running several lives at once.</h2>
+  <p class="section-sub">Work. Family. Community. None of these stop for the others — and the coordination between them falls on you.</p>
+  <div class="problems">
+    <div class="problem-card">
+      <h3>Multiple inboxes. One person.</h3>
+      <p>Work email, personal email, texts, voicemails. Context-switching all day just to stay afloat.</p>
+    </div>
+    <div class="problem-card">
+      <h3>Calls you can't always take.</h3>
+      <p>Between meetings, pickups, and commitments — the phone doesn't stop. Neither does the backlog.</p>
+    </div>
+    <div class="problem-card">
+      <h3>Logistics that don't manage themselves.</h3>
+      <p>Supplies. Groceries. Bills. RSVPs. Each one small. Together, they're a second job.</p>
+    </div>
+    <div class="problem-card">
+      <h3>No bridge between your worlds.</h3>
+      <p>Work and personal life live in separate tools, separate tabs, separate mental load. The gap costs time you don't have.</p>
+    </div>
+  </div>
+</section>
+
+<section id="capabilities">
+  <div class="section-label">What It Does</div>
+  <h2 class="section-title">One agent. Every domain.</h2>
+  <p class="section-sub">Speak It handles the work that accumulates between your real priorities.</p>
+  <div class="capabilities">
+    <div class="cap-card">
+      <div class="cap-icon">✉️</div>
+      <h3>Email & Messages</h3>
+      <p>Drafts, sends, and follows up across all your inboxes — one unified flow.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">📞</div>
+      <h3>Call Screening</h3>
+      <p>Answers what you can't. Summarizes who called and why. You decide what needs a callback.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">📅</div>
+      <h3>Scheduling</h3>
+      <p>Finds time across all your calendars without back-and-forth.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">🛒</div>
+      <h3>Shopping & Supplies</h3>
+      <p>Orders what you need — work or home. Tracks and confirms delivery.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">💳</div>
+      <h3>Bills & Finances</h3>
+      <p>Tracks what's due. Flags anomalies. Monthly summary in under two minutes.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">🤝</div>
+      <h3>Community & Volunteering</h3>
+      <p>RSVPs, reminders, and follow-ups for every commitment — handled.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">🔍</div>
+      <h3>Research & Drafting</h3>
+      <p>Look things up, write things out, prepare what you need before you need it.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">👨‍👩‍👧</div>
+      <h3>Family Logistics</h3>
+      <p>Schedules, errands, gifts. Personal life handled alongside professional.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">Speak. Approve. Done.</h2>
+  <p class="section-sub">No apps to learn. No dashboards to maintain. Just say what you need.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Speak, text, email, or open the web</h3>
+        <p>Every channel connects to the same agent. Pick up the phone, send a text, or log in — your agent remembers everything regardless of how you reached it.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Your agent gets to work</h3>
+        <p>Research, draft, schedule, order, screen — tasks are executed in the background while you focus on what only you can do.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>One tap to approve</h3>
+        <p>Anything that touches the outside world waits for your approval. One tap. No friction. Full control.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Your homepage stays current</h3>
+        <p>Log in to your personal dashboard and see exactly where things stand — tasks pending, commitments upcoming, inbox summarized. Always current. Never stale.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 2.5rem;">
+    <div class="section-label" style="margin-bottom: 1rem;">Available everywhere</div>
+    <div class="modals">
+      <div class="modal-pill"><span>🎙️</span> Voice call</div>
+      <div class="modal-pill"><span>💬</span> Text message</div>
+      <div class="modal-pill"><span>✉️</span> Email</div>
+      <div class="modal-pill"><span>🌐</span> Web dashboard</div>
+    </div>
+  </div>
+</section>
+
+<section id="approvals">
+  <div class="section-label">Approval Queue</div>
+  <h2 class="section-title">You stay in control.</h2>
+  <p class="section-sub">Every external action is queued for your approval. One tap and it's done.</p>
+  <div class="approval-demo">
+    <div class="label">⏳ 3 items waiting for your approval</div>
+    <div class="approval-item">
+      <div class="approval-text">
+        Send follow-up email to client
+        <small>Draft ready · 2 min ago</small>
+      </div>
+      <div class="approval-btns">
+        <button class="btn-approve">✓ Send</button>
+        <button class="btn-skip">Skip</button>
+      </div>
+    </div>
+    <div class="approval-item">
+      <div class="approval-text">
+        Order office supplies
+        <small>3 items · $54.99 · Amazon</small>
+      </div>
+      <div class="approval-btns">
+        <button class="btn-approve">✓ Order</button>
+        <button class="btn-skip">Skip</button>
+      </div>
+    </div>
+    <div class="approval-item">
+      <div class="approval-text">
+        RSVP to community event — Thursday 6pm
+        <small>Deadline today</small>
+      </div>
+      <div class="approval-btns">
+        <button class="btn-approve">✓ Yes</button>
+        <button class="btn-skip">Skip</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dashboard">
+  <div class="section-label">Your Homepage</div>
+  <h2 class="section-title">Your life. One place.</h2>
+  <p class="section-sub">A living dashboard, maintained by your agent. Always up to date. Yours alone.</p>
+  <div class="homepage-preview">
+    <div class="preview-bar">
+      <div class="preview-dots"><span></span><span></span><span></span></div>
+      <div class="preview-url">you.home.tools</div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-greeting">Good morning. <span>Here's your day.</span></div>
+      <div class="preview-widgets">
+        <div class="preview-widget">
+          <div class="w-label">Inbox</div>
+          <div class="w-val">4 need attention</div>
+          <div class="w-sub">Work + personal</div>
+        </div>
+        <div class="preview-widget">
+          <div class="w-label">Pending approvals</div>
+          <div class="w-val">3 items</div>
+          <div class="w-sub">Tap to review</div>
+        </div>
+        <div class="preview-widget">
+          <div class="w-label">Next meeting</div>
+          <div class="w-val">10:30 AM</div>
+          <div class="w-sub">Calendar synced</div>
+        </div>
+        <div class="preview-widget">
+          <div class="w-label">Pickup reminder</div>
+          <div class="w-val">3:15 PM</div>
+          <div class="w-sub">Reminder set</div>
+        </div>
+        <div class="preview-widget">
+          <div class="w-label">Bills due</div>
+          <div class="w-val">All clear</div>
+          <div class="w-sub">Next due May 8</div>
+        </div>
+        <div class="preview-widget">
+          <div class="w-label">Community</div>
+          <div class="w-val">Event Thu</div>
+          <div class="w-sub">RSVP pending</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="security">
+  <div class="section-label">Security & Trust</div>
+  <h2 class="section-title">Built for people who have something to protect.</h2>
+  <p class="section-sub">High-value clients demand discretion. Every design decision reflects that.</p>
+  <div class="security-grid">
+    <div class="security-item">
+      <div class="security-icon">🔒</div>
+      <div>
+        <h4>Approval-gated actions</h4>
+        <p>Nothing is sent, ordered, or scheduled without your explicit confirmation.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-icon">🛡️</div>
+      <div>
+        <h4>Private by design</h4>
+        <p>Your data is yours. No third-party advertising. No data sharing. Ever.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-icon">📋</div>
+      <div>
+        <h4>Full audit trail</h4>
+        <p>Every action is logged. You can see exactly what your agent did and when.</p>
+      </div>
+    </div>
+    <div class="security-item">
+      <div class="security-icon">👤</div>
+      <div>
+        <h4>Human in the loop</h4>
+        <p>High-stakes decisions — financial, medical, legal — always wait for you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-section" id="contact">
+  <h2>Ready to hand it off?</h2>
+  <p>Speak It is currently invitation-only. Request your spot.</p>
+  <a href="mailto:jimmy@gopherdrones.com?subject=Speak It — Early Access Request" class="btn-primary">Request Early Access</a>
+</div>
+
+<footer>
+  © 2026 Speak It &nbsp;·&nbsp; Invitation only &nbsp;·&nbsp; jimsbots.com
+</footer>
+
+</body>
+</html>

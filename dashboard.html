@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Speak It</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080e;
+      --surface: #11111a;
+      --border: #1c1c2a;
+      --accent: #7c6fe0;
+      --accent-soft: #a89df0;
+      --text: #eeeef5;
+      --muted: #6e6e82;
+      --gold: #c9a84c;
+      --gold-soft: #e8c97a;
+      --green: #4ade80;
+      --green-bg: rgba(74,222,128,0.1);
+      --green-border: rgba(74,222,128,0.25);
+    }
+
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.875rem 1.75rem;
+      background: rgba(8,8,14,0.8); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .wordmark { font-weight: 800; font-size: 0.95rem; color: var(--gold-soft); letter-spacing: 0.05em; }
+    .wordmark span { color: var(--muted); font-weight: 400; font-size: 0.8rem; margin-left: 0.5rem; font-family: monospace; }
+    .agent-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.35rem 0.875rem;
+      font-size: 0.78rem; font-weight: 600; color: var(--muted);
+    }
+    .agent-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+    /* MAIN CANVAS */
+    .canvas {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* GREETING */
+    .greeting {
+      position: absolute;
+      top: 5.5rem;
+      text-align: center;
+    }
+    .greeting h1 {
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .greeting h1 span { color: var(--gold-soft); }
+    .greeting p { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* RADIAL */
+    .radial-wrap {
+      position: relative;
+      width: min(520px, 90vw);
+      height: min(520px, 90vw);
+    }
+
+    /* CENTER ORB */
+    .orb {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #a89df0 0%, #7c6fe0 50%, #4a3fa0 100%);
+      box-shadow: 0 0 40px rgba(124,111,224,0.4), 0 0 80px rgba(124,111,224,0.15);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s;
+    }
+    .orb:hover {
+      box-shadow: 0 0 60px rgba(124,111,224,0.6), 0 0 100px rgba(124,111,224,0.2);
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    .orb.listening {
+      background: radial-gradient(circle at 40% 35%, #ff8080 0%, #e05050 50%, #a03030 100%);
+      box-shadow: 0 0 40px rgba(224,80,80,0.5), 0 0 80px rgba(224,80,80,0.2);
+      animation: pulse-orb 1s infinite;
+    }
+    @keyframes pulse-orb { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.08)} }
+    .orb-icon { font-size: 2rem; margin-bottom: 0.1rem; }
+    .orb-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+
+    /* ORBIT RING */
+    .orbit-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      border: 1px dashed rgba(124,111,224,0.2);
+      pointer-events: none;
+    }
+
+    /* SEGMENT NODES */
+    .node {
+      position: absolute;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      z-index: 5;
+    }
+    .node:hover {
+      border-color: var(--accent);
+      background: rgba(124,111,224,0.1);
+      transform: scale(1.1);
+    }
+    .node.has-badge { border-color: var(--gold); }
+    .node-icon { font-size: 1.4rem; }
+    .node-label {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-top: 0.2rem;
+      text-align: center; line-height: 1.2;
+    }
+    .node-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: var(--gold); color: #000;
+      font-size: 0.65rem; font-weight: 800;
+      border-radius: 999px; min-width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+    }
+
+    /* Position nodes on circle r=170 */
+    /* top */
+    .node-0  { top: calc(50% - 170px - 40px); left: calc(50% - 40px); }
+    /* top-right */
+    .node-1  { top: calc(50% - 120px - 40px); left: calc(50% + 120px - 40px); }
+    /* right */
+    .node-2  { top: calc(50% - 40px); left: calc(50% + 170px - 40px); }
+    /* bottom-right */
+    .node-3  { top: calc(50% + 120px - 40px); left: calc(50% + 120px - 40px); }
+    /* bottom */
+    .node-4  { top: calc(50% + 170px - 40px); left: calc(50% - 40px); }
+    /* bottom-left */
+    .node-5  { top: calc(50% + 120px - 40px); left: calc(50% - 120px - 40px); }
+    /* left */
+    .node-6  { top: calc(50% - 40px); left: calc(50% - 170px - 40px); }
+    /* top-left */
+    .node-7  { top: calc(50% - 120px - 40px); left: calc(50% - 120px - 40px); }
+
+    /* PANEL */
+    .panel {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: min(540px, 96vw);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 1.25rem 1.5rem 2rem;
+      z-index: 20;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      transform: translateX(-50%) translateY(100%);
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+    .panel.open { transform: translateX(-50%) translateY(0); }
+    .panel-handle {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: var(--border); margin: 0 auto 1rem;
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 800;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .panel-close {
+      margin-left: auto; background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 1.1rem;
+      padding: 0.1rem 0.4rem; border-radius: 4px;
+    }
+    .panel-close:hover { color: var(--text); }
+
+    /* PANEL ITEMS */
+    .pitem {
+      display: flex; align-items: center; gap: 0.875rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pitem:last-child { border-bottom: none; }
+    .pitem-icon { font-size: 1.1rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
+    .pitem-text { flex: 1; }
+    .pitem-text strong { font-size: 0.875rem; display: block; margin-bottom: 0.1rem; }
+    .pitem-text span { font-size: 0.78rem; color: var(--muted); }
+    .pitem-action {
+      font-size: 0.75rem; font-weight: 700;
+      color: var(--green); background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      border-radius: 6px; padding: 0.3rem 0.7rem;
+      cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .pitem-action:hover { background: rgba(74,222,128,0.2); }
+    .pitem-action.done { color: var(--muted); background: transparent; border-color: var(--border); }
+    .pitem-time { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
+
+    /* SPEAK INPUT */
+    .speak-bar {
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: min(540px, 96vw);
+      padding: 1rem 1.25rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      z-index: 19;
+      display: flex; gap: 0.75rem; align-items: center;
+      transition: all 0.35s;
+    }
+    .speak-bar.hidden { transform: translateX(-50%) translateY(100%); }
+    .speak-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 0.875rem;
+      color: var(--text); font-family: inherit; font-size: 0.9rem;
+      outline: none;
+    }
+    .speak-input::placeholder { color: var(--muted); }
+    .speak-go {
+      background: var(--accent); color: #fff; border: none;
+      padding: 0.6rem 1rem; border-radius: 8px;
+      font-size: 0.875rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* OVERLAY */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .overlay.show { opacity: 1; pointer-events: all; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; top: 4.5rem; left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(17,17,26,0.95); border: 1px solid var(--accent);
+      color: var(--accent-soft); padding: 0.5rem 1.25rem;
+      border-radius: 999px; font-size: 0.82rem; font-weight: 600;
+      z-index: 100; opacity: 0; transition: all 0.3s; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 500px) {
+      .orbit-ring { width: 260px; height: 260px; }
+      .node-0  { top: calc(50% - 130px - 40px); left: calc(50% - 40px); }
+      .node-1  { top: calc(50% - 92px - 40px); left: calc(50% + 92px - 40px); }
+      .node-2  { top: calc(50% - 40px); left: calc(50% + 130px - 40px); }
+      .node-3  { top: calc(50% + 92px - 40px); left: calc(50% + 92px - 40px); }
+      .node-4  { top: calc(50% + 130px - 40px); left: calc(50% - 40px); }
+      .node-5  { top: calc(50% + 92px - 40px); left: calc(50% - 92px - 40px); }
+      .node-6  { top: calc(50% - 40px); left: calc(50% - 130px - 40px); }
+      .node-7  { top: calc(50% - 92px - 40px); left: calc(50% - 92px - 40px); }
+      .node { width: 64px; height: 64px; }
+      .node-icon { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wordmark">✦ Speak It <span>you.jimmys.tools</span></div>
+  <div class="agent-pill"><div class="agent-dot"></div>Agent active</div>
+</div>
+
+<!-- CANVAS -->
+<div class="canvas">
+  <div class="greeting">
+    <h1>Good morning. <span>What needs handling?</span></h1>
+    <p id="date-line">Friday, May 1 · Your agent has been working since 6:00 AM</p>
+  </div>
+
+  <div class="radial-wrap">
+    <div class="orbit-ring"></div>
+
+    <!-- CENTER ORB -->
+    <div class="orb" id="orb" onclick="toggleSpeak()">
+      <div class="orb-icon" id="orb-icon">🎙️</div>
+      <div class="orb-label" id="orb-label">Speak</div>
+    </div>
+
+    <!-- NODES -->
+    <div class="node node-0 has-badge" onclick="openPanel('approvals')">
+      <div class="node-badge">3</div>
+      <div class="node-icon">⏳</div>
+      <div class="node-label">Approvals</div>
+    </div>
+    <div class="node node-1 has-badge" onclick="openPanel('inbox')">
+      <div class="node-badge">4</div>
+      <div class="node-icon">✉️</div>
+      <div class="node-label">Inbox</div>
+    </div>
+    <div class="node node-2" onclick="openPanel('calendar')">
+      <div class="node-icon">📅</div>
+      <div class="node-label">Calendar</div>
+    </div>
+    <div class="node node-3" onclick="openPanel('shopping')">
+      <div class="node-icon">🛒</div>
+      <div class="node-label">Shopping</div>
+    </div>
+    <div class="node node-4" onclick="openPanel('finances')">
+      <div class="node-icon">💳</div>
+      <div class="node-label">Finances</div>
+    </div>
+    <div class="node node-5" onclick="openPanel('community')">
+      <div class="node-icon">🤝</div>
+      <div class="node-label">Community</div>
+    </div>
+    <div class="node node-6" onclick="openPanel('family')">
+      <div class="node-icon">👨‍👩‍👧</div>
+      <div class="node-label">Family</div>
+    </div>
+    <div class="node node-7" onclick="openPanel('log')">
+      <div class="node-icon">🤖</div>
+      <div class="node-label">Agent Log</div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-handle"></div>
+  <div class="panel-title" id="panel-title">
+    <span id="panel-icon"></span> <span id="panel-name"></span>
+    <button class="panel-close" onclick="closeAll()">✕</button>
+  </div>
+  <div id="panel-body"></div>
+</div>
+
+<!-- SPEAK BAR -->
+<div class="speak-bar hidden" id="speak-bar">
+  <input class="speak-input" id="speak-input" placeholder='Try "Order office supplies" or "Draft a follow-up to my client"' />
+  <button class="speak-go" onclick="sendSpeak()">→</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const panels = {
+  approvals: {
+    icon: '⏳', name: 'Pending Approvals',
+    html: `
+      <div class="pitem">
+        <div class="pitem-icon">✉️</div>
+        <div class="pitem-text"><strong>Follow-up email — draft ready</strong><span>Client referral · 3 min ago</span></div>
+        <button class="pitem-action" onclick="approveItem(this,'Sent')">Send</button>
+      </div>
+      <div class="pitem">
+        <div class="pitem-icon">🛒</div>
+        <div class="pitem-text"><strong>Office supplies order — $41.97</strong><span>Amazon · arrives tomorrow</span></div>
+        <button class="pitem-action" onclick="approveItem(this,'Ordered')">Order</button>
+      </div>
+      <div class="pitem">
+        <div class="pitem-icon">📅</div>
+        <div class="pitem-text"><strong>Community event RSVP — Thu 6 PM</strong><span>Deadline today</span></div>
+        <button class="pitem-action" onclick="approveItem(this,'Confirmed')">Yes</button>
+      </div>`
+  },
+  inbox: {
+    icon: '✉️', name: 'Inbox',
+    html: `
+      <div class="pitem">
+        <div class="pitem-icon">📧</div>
+        <div class="pitem-text"><strong>Client follow-up needed</strong><span>Work · 8:42 AM</span></div>
+        <div class="pitem-time">Outlook</div>
+      </div>
+      <div class="pitem">
+        <div class="pitem-icon">📧</div>
+        <div class="pitem-text"><strong>Board call agenda — action items</strong><span>Work · 7:15 AM</span></div>
+        <div class="pitem-time">Outlook</div>
+      </div>
+      <div class="pitem">
+        <div class="pitem-icon">📧</div>
+        <div class="pitem-text"><strong>Volunteer schedule — May</strong><span>Personal · Yesterday</span></div>
+        <div class="pitem-time">Gmail</div>
+      </div>
+      <div class="pitem">
+        <div class="pitem-icon">📧</div>
+        <div class="pitem-text"><strong>Order confirmation</strong><span>Personal · Yesterday</span></div>
+        <div class="pitem-time">Gmail</div>
+      </div>`
+  },
+  calendar: {
+    icon: '📅', name: 'Today',
+    html: `
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Morning drop-off</strong><span>8:00 AM · Done</span></div></div>
+      <div class="pitem"><div class="pitem-icon">🔵</div><div class="pitem-text"><strong>Morning work block</strong><span>9:30 AM · In progress</span></div></div>
+      <div class="pitem"><div class="pitem-icon">🟣</div><div class="pitem-text"><strong>Board call</strong><span>10:30 AM · Now</span></div></div>
+      <div class="pitem"><div class="pitem-icon">⚪</div><div class="pitem-text"><strong>Volunteer — reading hour</strong><span>2:00 PM</span></div></div>
+      <div class="pitem"><div class="pitem-icon">⚪</div><div class="pitem-text"><strong>Pickup</strong><span>3:15 PM · Reminder set</span></div></div>
+      <div class="pitem"><div class="pitem-icon">⚪</div><div class="pitem-text"><strong>Community mixer</strong><span>6:00 PM · RSVP pending</span></div></div>`
+  },
+  shopping: {
+    icon: '🛒', name: 'Shopping',
+    html: `
+      <div class="pitem"><div class="pitem-icon">⏳</div><div class="pitem-text"><strong>Office supplies × 3</strong><span>$41.97 · Awaiting approval</span></div><button class="pitem-action" onclick="approveItem(this,'Ordered')">Order</button></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Previous order — delivered</strong><span>Apr 29 · Confirmed</span></div></div>`
+  },
+  finances: {
+    icon: '💳', name: 'Finances',
+    html: `
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>All bills current</strong><span>Nothing due this week</span></div></div>
+      <div class="pitem"><div class="pitem-icon">📅</div><div class="pitem-text"><strong>Next bill due</strong><span>May 8 · $124.00</span></div></div>
+      <div class="pitem"><div class="pitem-icon">📊</div><div class="pitem-text"><strong>Monthly summary ready</strong><span>April · Tap to review</span></div></div>`
+  },
+  community: {
+    icon: '🤝', name: 'Community',
+    html: `
+      <div class="pitem"><div class="pitem-icon">⏳</div><div class="pitem-text"><strong>Community mixer RSVP</strong><span>Thu 6 PM · Deadline today</span></div><button class="pitem-action" onclick="approveItem(this,'Confirmed')">Confirm</button></div>
+      <div class="pitem"><div class="pitem-icon">📅</div><div class="pitem-text"><strong>Volunteer — reading hour</strong><span>Today 2:00 PM · Lincoln Elementary</span></div></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Last meeting — notes sent</strong><span>Apr 28 · Done</span></div></div>`
+  },
+  family: {
+    icon: '👨‍👩‍👧', name: 'Family',
+    html: `
+      <div class="pitem"><div class="pitem-icon">📅</div><div class="pitem-text"><strong>School pickup</strong><span>3:15 PM · Reminder set</span></div></div>
+      <div class="pitem"><div class="pitem-icon">🛒</div><div class="pitem-text"><strong>Grocery list</strong><span>12 items · Ready to order</span></div><button class="pitem-action" onclick="approveItem(this,'Ordered')">Order</button></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Birthday gift — shipped</strong><span>Arrives May 3</span></div></div>`
+  },
+  log: {
+    icon: '🤖', name: 'Agent Activity',
+    html: `
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Drafted follow-up email</strong><span>Awaiting your approval · 8 min ago</span></div></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Found and queued supply order</strong><span>Amazon · Awaiting approval · 22 min ago</span></div></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Summarized board agenda</strong><span>Flagged 2 items · 1 hr ago</span></div></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Set pickup reminder</strong><span>3:15 PM · 6:02 AM</span></div></div>
+      <div class="pitem"><div class="pitem-icon">✅</div><div class="pitem-text"><strong>Checked all bills</strong><span>All clear · 6:00 AM</span></div></div>`
+  }
+};
+
+let currentPanel = null;
+let speaking = false;
+
+function openPanel(key) {
+  const p = panels[key];
+  document.getElementById('panel-icon').textContent = p.icon;
+  document.getElementById('panel-name').textContent = p.name;
+  document.getElementById('panel-body').innerHTML = p.html;
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('speak-bar').classList.add('hidden');
+  currentPanel = key;
+}
+
+function closeAll() {
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  if (!speaking) document.getElementById('speak-bar').classList.add('hidden');
+  currentPanel = null;
+}
+
+function toggleSpeak() {
+  if (currentPanel) { closeAll(); return; }
+  speaking = !speaking;
+  const orb = document.getElementById('orb');
+  const icon = document.getElementById('orb-icon');
+  const label = document.getElementById('orb-label');
+  const bar = document.getElementById('speak-bar');
+  if (speaking) {
+    orb.classList.add('listening');
+    icon.textContent = '⏹️';
+    label.textContent = 'Cancel';
+    bar.classList.remove('hidden');
+    document.getElementById('speak-input').focus();
+  } else {
+    orb.classList.remove('listening');
+    icon.textContent = '🎙️';
+    label.textContent = 'Speak';
+    bar.classList.add('hidden');
+  }
+}
+
+function sendSpeak() {
+  const val = document.getElementById('speak-input').value.trim();
+  if (!val) return;
+  showToast('🤖 Got it — on it');
+  document.getElementById('speak-input').value = '';
+  speaking = false;
+  document.getElementById('orb').classList.remove('listening');
+  document.getElementById('orb-icon').textContent = '🎙️';
+  document.getElementById('orb-label').textContent = 'Speak';
+  document.getElementById('speak-bar').classList.add('hidden');
+}
+
+function approveItem(btn, label) {
+  btn.textContent = '✓ ' + label;
+  btn.classList.add('done');
+  btn.onclick = null;
+  showToast('✓ ' + label);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.getElementById('speak-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendSpeak();
+  if (e.key === 'Escape') toggleSpeak();
+});
+
+const now = new Date();
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+document.getElementById('date-line').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()} · Your agent has been working since 6:00 AM`;
+</script>
+</body>
+</html>
