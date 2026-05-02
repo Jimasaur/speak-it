@@ -6,54 +6,60 @@ Premium, voice-first personal AI assistant prototype for high-value clients.
 
 ## Product thesis
 
-One agent handles the user's real-life operational load across voice, text, email, phone, and web. Same context everywhere. External actions are approval-gated.
+The agent speaks and listens as the primary interface. The screen is not a control panel; it is a calm approval surface for the few moments that need judgment.
 
-The client should not think "chatbot." They should notice that email, calls, scheduling, shopping, finances, community, and family logistics are being quietly handled.
+The client should not think "chatbot." They should notice that email, calls, scheduling, shopping, finances, community, and family logistics are being quietly prepared or handled.
 
 ## Current prototype
 
-Static HTML/CSS/JS, intentionally deployable to S3/CloudFront without a build step.
+Static HTML/CSS/JS, intentionally deployable behind Caddy/S3/CloudFront without a build step.
 
-- `index.html` — landing page with personalized dashboard handoff
-- `dashboard.html` — interactive dashboard prototype
-- `landing.html` — previous landing concept, retained for reference
-- `generic.html` — earlier full-page concept, retained for reference
+- `index.html` — Sarah-specific landing page
+- `dashboard/index.html` — final approval-surface dashboard, based on the top-three card stack
+- `dashboard-card.html` — alternate single-card experiment, retained for comparison
+- `dashboard-stack.html` — source variant used for the final dashboard
+- `dashboard-radial.html` — earlier radial-nav concept, retained for comparison
+- `dashboard.html` — earlier tabs/list dashboard, retained for comparison
+- `variants.html` — local variant picker; not required for public deployment
 
-## Functional demo behavior
+## Final demo behavior
 
-The dashboard now includes:
+The public demo focuses on the new modality:
 
+- Sarah-personalized landing page
+- top-three approval stack instead of broad navigation
+- active context halo showing where proposals came from
+- `Yes`, `Change`, and `Not now` actions
+- `Not now` behaves as snooze semantics, not deletion
+- quiet activity log
+- simulated voice-command orb that drafts new proposals
 - persistent demo state via `localStorage`
-- personalized client name from landing page query/local storage
-- radial navigation across Approvals, Inbox, Calendar, Shopping, Finances, Community, Family, Agent Log
-- approval/dismiss/edit actions that mutate state
-- agent log updates when actions happen
-- voice-command simulation through the center orb
-- simple command parser for purchases, calendar moves, inbox summaries, and custom tasks
-- reset-demo control
 
-## Live surfaces
+## Deployment target
 
-- Landing: https://demo.gopherdrones.com/
-- Dashboard: https://demo.gopherdrones.com/dashboard/
-- Mirror: http://jimsbots.com/ and `/dashboard/`
+Requested public host:
+
+- `https://sarah.gatherwell.tools/`
+
+DNS currently points at GatherWell EC2 (`3.132.63.35`). Deploy by serving this static directory from the GatherWell Caddy container under a dedicated `sarah.gatherwell.tools` site block.
 
 ## Underlying stack context
 
 Not implemented in this static repo, but this is the target architecture:
 
-- **Leo** — OpenAI Realtime voice agent, Twilio inbound, running via Mercury at `mercury.gopherdrones.com`
-- **Mercury** — Rails control plane at `/home/jimasaur/Mercury`, SQLite, services `mercury-app.service` + `mercury-tunnel.service`
-- **Grumpy** — local OpenClaw agent (`--profile grumpy`), Mercury reasoning/execution sidecar via `OPENCLAW_PROFILE=grumpy`
-- Post-call sidecar creates `SidecarEvent` + `ActionDraft`; Grumpy heartbeat polls and acts
+- **Leo** — OpenAI Realtime voice agent, Twilio inbound, running via Mercury
+- **Mercury** — Rails control plane and ActionDraft store
+- **Grumpy** — local OpenClaw agent / execution sidecar
+- **Skippy** — coordination, product direction, and demo polish
+- External actions remain approval-gated.
 
 ## Next build steps
 
-1. Pick a final name. "Speak It" is a placeholder.
+1. Decide whether `Speak It` is the final name or a demo codename.
 2. Replace hardcoded demo data with a static JSON profile/action model.
-3. Add a client-page generator for `[name].jimmys.tools` style demos.
-4. Wire a real Mercury API read-only endpoint for action drafts/log events.
-5. Add a real voice capture/demo path or simulated transcript playback.
+3. Wire a read-only Mercury endpoint for action drafts/log events.
+4. Add real voice capture or transcript playback.
+5. Generate per-client demo pages from profile data.
 
 ## Direction
 
