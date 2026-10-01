@@ -2,7 +2,7 @@
 
 > "Speak it and it shall be."
 
-Premium, voice-first personal AI assistant prototype for high-value clients.
+A voice-first personal assistant experience prototype focused on clear action review and calm interaction design.
 
 ## Product thesis
 
@@ -32,20 +32,19 @@ The dashboard now includes:
 - simple command parser for purchases, calendar moves, inbox summaries, and custom tasks
 - reset-demo control
 
-## Live surfaces
+## Explore locally
 
-- Landing: https://demo.gopherdrones.com/
-- Dashboard: https://demo.gopherdrones.com/dashboard/
-- Mirror: http://jimsbots.com/ and `/dashboard/`
+From the repository root:
 
-## Underlying stack context
+```bash
+python3 -m http.server 4173 --bind 127.0.0.1
+```
 
-Not implemented in this static repo, but this is the target architecture:
+Open `http://127.0.0.1:4173/`. Demo actions update browser state only; they do not send messages, place orders, move money, or change a real calendar. Use fictional names and requests while exploring, since demo state is saved in this browser's `localStorage`.
 
-- **Leo** — OpenAI Realtime voice agent, Twilio inbound, running via Mercury at `mercury.gopherdrones.com`
-- **Mercury** — Rails control plane at `/home/jimasaur/Mercury`, SQLite, services `mercury-app.service` + `mercury-tunnel.service`
-- **Grumpy** — local OpenClaw agent (`--profile grumpy`), Mercury reasoning/execution sidecar via `OPENCLAW_PROFILE=grumpy`
-- Post-call sidecar creates `SidecarEvent` + `ActionDraft`; Grumpy heartbeat polls and acts
+## Architecture boundary
+
+This repository contains the static experience prototype. A real deployment would require an authenticated backend, a voice provider, scoped integrations, and server-side approval and audit controls. Those services are outside this repository; the UI is not evidence that they are connected.
 
 ## Next build steps
 
@@ -57,4 +56,4 @@ Not implemented in this static repo, but this is the target architecture:
 
 ## Direction
 
-Premium, calm, capable, dark UI, purple/gold palette. Not chatbot-bro energy. Invisible infrastructure feel.
+Premium, calm, capable, dark UI, purple/gold palette. Designed to make the next action and its approval state easy to understand.
