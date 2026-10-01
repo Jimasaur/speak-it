@@ -21,16 +21,16 @@ Static HTML/CSS/JS, intentionally deployable to S3/CloudFront without a build st
 
 ## Functional demo behavior
 
-The dashboard now includes:
+The dashboard includes:
 
 - persistent demo state via `localStorage`
-- personalized client name from landing page query/local storage
-- radial navigation across Approvals, Inbox, Calendar, Shopping, Finances, Community, Family, Agent Log
-- approval/dismiss/edit actions that mutate state
-- agent log updates when actions happen
-- voice-command simulation through the center orb
-- simple command parser for purchases, calendar moves, inbox summaries, and custom tasks
-- reset-demo control
+- personalized client name from landing-page query/local storage
+- action filters for Needs your OK, Handled, Prepared, and Everything
+- review and approval interactions that update the demo state
+- a text-request form for adding simulated assistant tasks
+- activity updates and a reset-demo control
+
+The current interaction is text-driven; live microphone capture and provider-backed voice execution are not implemented here.
 
 ## Explore locally
 
