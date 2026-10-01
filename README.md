@@ -2,7 +2,7 @@
 
 > "Speak it and it shall be."
 
-Premium, voice-first personal AI assistant prototype for high-value clients.
+A voice-first personal assistant experience prototype focused on clear action review and calm interaction design.
 
 ## Product thesis
 
@@ -21,31 +21,30 @@ Static HTML/CSS/JS, intentionally deployable to S3/CloudFront without a build st
 
 ## Functional demo behavior
 
-The dashboard now includes:
+The dashboard includes:
 
 - persistent demo state via `localStorage`
-- personalized client name from landing page query/local storage
-- radial navigation across Approvals, Inbox, Calendar, Shopping, Finances, Community, Family, Agent Log
-- approval/dismiss/edit actions that mutate state
-- agent log updates when actions happen
-- voice-command simulation through the center orb
-- simple command parser for purchases, calendar moves, inbox summaries, and custom tasks
-- reset-demo control
+- personalized client name from landing-page query/local storage
+- action filters for Needs your OK, Handled, Prepared, and Everything
+- review and approval interactions that update the demo state
+- a text-request form for adding simulated assistant tasks
+- activity updates and a reset-demo control
 
-## Live surfaces
+The current interaction is text-driven; live microphone capture and provider-backed voice execution are not implemented here.
 
-- Landing: https://demo.gopherdrones.com/
-- Dashboard: https://demo.gopherdrones.com/dashboard/
-- Mirror: http://jimsbots.com/ and `/dashboard/`
+## Explore locally
 
-## Underlying stack context
+From the repository root:
 
-Not implemented in this static repo, but this is the target architecture:
+```bash
+python3 -m http.server 4173 --bind 127.0.0.1
+```
 
-- **Leo** — OpenAI Realtime voice agent, Twilio inbound, running via Mercury at `mercury.gopherdrones.com`
-- **Mercury** — Rails control plane at `/home/jimasaur/Mercury`, SQLite, services `mercury-app.service` + `mercury-tunnel.service`
-- **Grumpy** — local OpenClaw agent (`--profile grumpy`), Mercury reasoning/execution sidecar via `OPENCLAW_PROFILE=grumpy`
-- Post-call sidecar creates `SidecarEvent` + `ActionDraft`; Grumpy heartbeat polls and acts
+Open `http://127.0.0.1:4173/`. Demo actions update browser state only; they do not send messages, place orders, move money, or change a real calendar. Use fictional names and requests while exploring, since demo state is saved in this browser's `localStorage`.
+
+## Architecture boundary
+
+This repository contains the static experience prototype. A real deployment would require an authenticated backend, a voice provider, scoped integrations, and server-side approval and audit controls. Those services are outside this repository; the UI is not evidence that they are connected.
 
 ## Next build steps
 
@@ -57,4 +56,4 @@ Not implemented in this static repo, but this is the target architecture:
 
 ## Direction
 
-Premium, calm, capable, dark UI, purple/gold palette. Not chatbot-bro energy. Invisible infrastructure feel.
+Premium, calm, capable, dark UI, purple/gold palette. Designed to make the next action and its approval state easy to understand.
